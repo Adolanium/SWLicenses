@@ -7,41 +7,8 @@ using WebDriverManager.Helpers;
 
 namespace SWLicenses
 {
-    internal class SWActivationManagerDriver
+    internal class SwActivationManagerDriver
     {
-        public static void CheckExistence()
-        {
-            CheckFileExists("serials.txt", "Error: \"serials.txt\" does not exist.");
-
-            CheckFileExists("credentials.txt", "Error: \"credentials.txt\" does not exist.");
-
-            CheckFileNotEmpty("serials.txt", "Error: \"serials.txt\" is empty. Add serial numbers to it.");
-
-            CheckFileNotEmpty("credentials.txt", "Error: \"credentials.txt\" is empty. Add your credentials to it.");
-        }
-
-        private static void CheckFileExists(string filePath, string errorMessage)
-        {
-            if (!System.IO.File.Exists(filePath))
-            {
-                Console.WriteLine(errorMessage);
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
-                Environment.Exit(1);
-            }
-        }
-
-        private static void CheckFileNotEmpty(string filePath, string errorMessage)
-        {
-            if (System.IO.File.ReadAllLines(filePath).Length == 0)
-            {
-                Console.WriteLine(errorMessage);
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
-                Environment.Exit(1);
-            }
-        }
-
         public static IWebDriver CreateChromeDriver()
         {
             ChromeOptions options = new ChromeOptions();
