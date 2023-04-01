@@ -23,7 +23,6 @@ namespace SWLicenses
 
         public static void Login(IWebDriver driver)
         {
-            // Get username and password from from text file
             string[] creds = System.IO.File.ReadAllLines("credentials.txt");
             string username = creds[0];
             string password = creds[1];
@@ -43,7 +42,7 @@ namespace SWLicenses
         {
             StreamWriter sw = new StreamWriter("results.csv");
             sw.WriteLine("Product Name,Serial Number,Computer,Maintenance End");
-            const int width = 50; // Width of the progress bar
+            const int width = 50;
             int total = serials.Length;
             int completed = 0;
 
