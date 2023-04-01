@@ -1,4 +1,5 @@
-﻿using OpenQA.Selenium;
+﻿using System.ComponentModel.Design;
+using OpenQA.Selenium;
 using WebDriverManager.DriverConfigs.Impl;
 using WebDriverManager.Helpers;
 using WebDriverManager;
@@ -9,6 +10,8 @@ namespace SWLicenses
     {
         public static void Main(string[] args)
         {
+            SWActivationManagerDriver.CheckExistence();
+
             string[] serials = System.IO.File.ReadAllLines("serials.txt");
             serials = Array.FindAll(serials, (s) => !string.IsNullOrWhiteSpace(s));
             serials = serials.Distinct().ToArray();
