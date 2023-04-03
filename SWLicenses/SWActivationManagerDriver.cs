@@ -43,7 +43,7 @@ namespace SWLicenses
         public static async Task LookupSerials(IWebDriver driver, string[] serials, IProgress<int> progress)
         {
             using var sw = new StreamWriter("results.csv");
-            sw.WriteLine("Product Name,Serial Number,Activated Computer,Maintenance End Date");
+            sw.WriteLine("\"Product Name\",\"Serial Number\",\"Activated Computer\",\"Maintenance End Date\"");
 
             int total = serials.Length;
             int completed = 0;

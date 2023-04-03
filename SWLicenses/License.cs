@@ -25,7 +25,7 @@ namespace SWLicenses
 
         public override string ToString()
         {
-            return $"{ProductName},{SerialNumber},{ActivatedComputer},{MaintenanceEndDate}";
+            return $"\"{ProductName}\",\"{SerialNumber}\",\"{ActivatedComputer}\",\"{MaintenanceEndDate.ToString("yyyy-MM-dd")}\"";
         }
     }
 }
