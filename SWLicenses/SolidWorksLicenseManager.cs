@@ -136,11 +136,15 @@ namespace SWLicenses
             }
         }
 
-
         private static string GenerateProgressBar(int progress, int width)
         {
             int completedWidth = progress * width / 100;
-            return new string('#', completedWidth) + new string(' ', width - completedWidth);
+            int remainingWidth = width - completedWidth;
+
+            string completedBar = new string('█', completedWidth);
+            string remainingBar = new string('░', remainingWidth);
+
+            return $"{completedBar}{remainingBar}";
         }
     }
 }
