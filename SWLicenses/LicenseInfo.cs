@@ -3,19 +3,27 @@ using System.IO;
 
 namespace SWLicenses
 {
-    internal class License
+    internal class LicenseInfo
     {
         public string ProductName { get; set; }
         public string SerialNumber { get; set; }
         public string ActivatedComputer { get; set; }
         public DateTime MaintenanceEndDate { get; set; }
 
-        public License(string productName, string serialNumber, string maintenanceEndDate)
+        public LicenseInfo(string productName, string serialNumber, string maintenanceEndDate)
         {
             ProductName = productName;
             SerialNumber = serialNumber;
             ActivatedComputer = "N/A";
             MaintenanceEndDate = DateTime.Parse(maintenanceEndDate);
+        }
+
+        public LicenseInfo(string productName, string serialNumber, string activatedComputer, DateTime maintenanceEndDate)
+        {
+            ProductName = productName;
+            SerialNumber = serialNumber;
+            ActivatedComputer = activatedComputer;
+            MaintenanceEndDate = maintenanceEndDate;
         }
 
         public void Write(StreamWriter sw)

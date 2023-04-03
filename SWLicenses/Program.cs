@@ -1,36 +1,38 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using OpenQA.Selenium;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
+using SWLicenses;
 
 namespace SWLicenses
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            FilesController.CheckExistence();
+            await FileValidator.CheckExistenceAsync();
 
-            string[] serials = File.ReadAllLines("serials.txt")
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Distinct()
-                .ToArray();
+            string[] serials = await Configuration.LoadSerialsAsync();
 
             new DriverManager().SetUpDriver(new ChromeConfig(), WebDriverManager.Helpers.VersionResolveStrategy.MatchingBrowser);
-            IWebDriver driver = SwActivationManagerDriver.CreateChromeDriver();
-            SwActivationManagerDriver.Login(driver);
+            IWebDriver driver = SolidWorksLicenseManager.CreateChromeDriver();
+            SolidWorksLicenseManager.Login(driver);
 
             var progress = new Progress<int>(percent =>
             {
                 Console.WriteLine($" Progress: {percent}%");
             });
 
-            SwActivationManagerDriver.LookupSerials(driver, serials, progress).GetAwaiter().GetResult();
+            await SolidWorksLicenseManager.LookupSerials(driver, serials, progress);
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
+
+            driver.Close();
+            driver.Quit();
         }
     }
 }

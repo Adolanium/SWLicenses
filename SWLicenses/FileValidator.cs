@@ -1,18 +1,22 @@
-﻿namespace SWLicenses
-{
-    internal class FilesController
-    {
-        public static void CheckExistence()
-        {
-            CheckFileExistsAndNotEmpty("serials.txt", "Error: \"serials.txt\" does not exist.", "Error: \"serials.txt\" is empty. Add serial numbers to it.");
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 
-            CheckFileExistsAndNotEmpty("credentials.txt", "Error: \"credentials.txt\" does not exist.", "Error: \"credentials.txt\" is empty. Add your credentials to it.");
+namespace SWLicenses
+{
+    internal class FileValidator
+    {
+        public static async Task CheckExistenceAsync()
+        {
+            await CheckFileExistsAndNotEmptyAsync("serials.txt", "Error: \"serials.txt\" does not exist.", "Error: \"serials.txt\" is empty. Add serial numbers to it.");
+
+            await CheckFileExistsAndNotEmptyAsync("credentials.txt", "Error: \"credentials.txt\" does not exist.", "Error: \"credentials.txt\" is empty. Add your credentials to it.");
         }
 
-        private static void CheckFileExistsAndNotEmpty(string filePath, string notExistMessage, string emptyMessage)
+        private static async Task CheckFileExistsAndNotEmptyAsync(string filePath, string notExistMessage, string emptyMessage)
         {
             CheckFileExists(filePath, notExistMessage);
-            CheckFileNotEmpty(filePath, emptyMessage);
+            await CheckFileNotEmptyAsync(filePath, emptyMessage);
         }
 
         private static void CheckFileExists(string filePath, string errorMessage)
@@ -36,9 +40,9 @@
             }
         }
 
-        private static void CheckFileNotEmpty(string filePath, string errorMessage)
+        private static async Task CheckFileNotEmptyAsync(string filePath, string errorMessage)
         {
-            if (File.ReadAllLines(filePath).Length == 0)
+            if ((await File.ReadAllLinesAsync(filePath)).Length == 0)
             {
                 ExitWithMessage(errorMessage + "\nPress any key to exit...");
             }
