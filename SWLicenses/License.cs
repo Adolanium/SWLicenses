@@ -1,4 +1,7 @@
-﻿namespace SWLicenses
+﻿using System;
+using System.IO;
+
+namespace SWLicenses
 {
     internal class License
     {
@@ -17,12 +20,12 @@
 
         public void Write(StreamWriter sw)
         {
-            sw.WriteLine(ProductName + "," + SerialNumber + "," + ActivatedComputer + "," + MaintenanceEndDate);
+            sw.WriteLine(ToString());
         }
 
-        public void Write()
+        public override string ToString()
         {
-            Console.WriteLine(ProductName + "," + SerialNumber + "," + ActivatedComputer + "," + MaintenanceEndDate);
+            return $"{ProductName},{SerialNumber},{ActivatedComputer},{MaintenanceEndDate}";
         }
     }
 }

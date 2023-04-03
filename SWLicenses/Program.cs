@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.Design;
+﻿using System;
+using System.IO;
+using System.Linq;
 using OpenQA.Selenium;
-using WebDriverManager.DriverConfigs.Impl;
-using WebDriverManager.Helpers;
 using WebDriverManager;
+using WebDriverManager.DriverConfigs.Impl;
 
 namespace SWLicenses
 {
@@ -12,17 +13,21 @@ namespace SWLicenses
         {
             FilesController.CheckExistence();
 
-            string[] serials = System.IO.File.ReadAllLines("serials.txt");
-            serials = Array.FindAll(serials, (s) => !string.IsNullOrWhiteSpace(s));
-            serials = serials.Distinct().ToArray();
-            new DriverManager().SetUpDriver(new ChromeConfig(), VersionResolveStrategy.MatchingBrowser);
+            string[] serials = File.ReadAllLines("serials.txt")
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct()
+                .ToArray();
+
+            new DriverManager().SetUpDriver(new ChromeConfig(), WebDriverManager.Helpers.VersionResolveStrategy.MatchingBrowser);
             IWebDriver driver = SwActivationManagerDriver.CreateChromeDriver();
             SwActivationManagerDriver.Login(driver);
+
             var progress = new Progress<int>(percent =>
             {
                 Console.WriteLine($" Progress: {percent}%");
             });
-            SwActivationManagerDriver.LookupSerials(driver, serials, progress);
+
+            SwActivationManagerDriver.LookupSerials(driver, serials, progress).GetAwaiter().GetResult();
 
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();

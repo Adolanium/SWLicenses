@@ -4,47 +4,51 @@
     {
         public static void CheckExistence()
         {
-            CheckFileExists("serials.txt", "Error: \"serials.txt\" does not exist.");
+            CheckFileExistsAndNotEmpty("serials.txt", "Error: \"serials.txt\" does not exist.", "Error: \"serials.txt\" is empty. Add serial numbers to it.");
 
-            CheckFileExists("credentials.txt", "Error: \"credentials.txt\" does not exist.");
+            CheckFileExistsAndNotEmpty("credentials.txt", "Error: \"credentials.txt\" does not exist.", "Error: \"credentials.txt\" is empty. Add your credentials to it.");
+        }
 
-            CheckFileNotEmpty("serials.txt", "Error: \"serials.txt\" is empty. Add serial numbers to it.");
-
-            CheckFileNotEmpty("credentials.txt", "Error: \"credentials.txt\" is empty. Add your credentials to it.");
+        private static void CheckFileExistsAndNotEmpty(string filePath, string notExistMessage, string emptyMessage)
+        {
+            CheckFileExists(filePath, notExistMessage);
+            CheckFileNotEmpty(filePath, emptyMessage);
         }
 
         private static void CheckFileExists(string filePath, string errorMessage)
         {
-            if (!System.IO.File.Exists(filePath))
+            if (!File.Exists(filePath))
             {
                 Console.WriteLine(errorMessage);
-                // Ask the user if he wants to create the file
+                // Ask the user if they want to create the file
                 Console.WriteLine("Do you want to create it? (Y/N)");
                 string answer = Console.ReadLine();
-                if (answer == "Y" || answer == "y")
+                if (answer.Equals("Y", StringComparison.OrdinalIgnoreCase))
                 {
-                    System.IO.File.Create(filePath);
+                    File.Create(filePath).Dispose();
                     Console.WriteLine("File created successfully.");
                 }
                 else
                 {
                     Console.WriteLine("File not created.");
                 }
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
-                Environment.Exit(1);
+                ExitWithMessage("Press any key to exit...");
             }
         }
 
         private static void CheckFileNotEmpty(string filePath, string errorMessage)
         {
-            if (System.IO.File.ReadAllLines(filePath).Length == 0)
+            if (File.ReadAllLines(filePath).Length == 0)
             {
-                Console.WriteLine(errorMessage);
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
-                Environment.Exit(1);
+                ExitWithMessage(errorMessage + "\nPress any key to exit...");
             }
+        }
+
+        private static void ExitWithMessage(string message)
+        {
+            Console.WriteLine(message);
+            Console.ReadKey();
+            Environment.Exit(1);
         }
     }
 }

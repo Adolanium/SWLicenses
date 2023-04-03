@@ -1,48 +1,50 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
-using WebDriverManager;
-using WebDriverManager.DriverConfigs.Impl;
-using WebDriverManager.Helpers;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SWLicenses
 {
     internal class SwActivationManagerDriver
     {
+        private const string Url = "https://activate.solidworks.com/manager/";
+        private static readonly string[] Credentials = File.ReadAllLines("credentials.txt");
+
         public static IWebDriver CreateChromeDriver()
         {
-            ChromeOptions options = new ChromeOptions();
+            var options = new ChromeOptions();
             options.AddArguments("headless");
-            ChromeDriverService service = ChromeDriverService.CreateDefaultService();
+
+            var service = ChromeDriverService.CreateDefaultService();
             service.SuppressInitialDiagnosticInformation = true;
             service.HideCommandPromptWindow = true;
-            IWebDriver driver = new ChromeDriver(service, options);
-            driver.Navigate().GoToUrl("https://activate.solidworks.com/manager/");
+
+            var driver = new ChromeDriver(service, options);
+            driver.Navigate().GoToUrl(Url);
             return driver;
         }
 
         public static void Login(IWebDriver driver)
         {
-            string[] creds = System.IO.File.ReadAllLines("credentials.txt");
-            string username = creds[0];
-            string password = creds[1];
-            driver.FindElement(By.Id("Login2_txtName")).SendKeys(username);
-            driver.FindElement(By.Id("Login2_txtPassword")).SendKeys(password);
+            driver.FindElement(By.Id("Login2_txtName")).SendKeys(Credentials[0]);
+            driver.FindElement(By.Id("Login2_txtPassword")).SendKeys(Credentials[1]);
             driver.FindElement(By.Id("Login2_cmdLogin")).Click();
         }
 
-        public static void LookupSerial(IWebDriver driver, String serial)
+        public static void LookupSerial(IWebDriver driver, string serial)
         {
             driver.FindElement(By.Id("txtSearch")).SendKeys(serial);
             driver.FindElement(By.Id("cmdLookup")).Click();
             driver.FindElement(By.LinkText("View")).Click();
         }
 
-        public static void LookupSerials(IWebDriver driver, string[] serials, IProgress<int> progress)
+        public static async Task LookupSerials(IWebDriver driver, string[] serials, IProgress<int> progress)
         {
-            StreamWriter sw = new StreamWriter("results.csv");
-            sw.WriteLine("Product Name,Serial Number,Computer,Maintenance End");
-            const int width = 50;
+            using var sw = new StreamWriter("results.csv");
+            sw.WriteLine("Product Name,Serial Number,Activated Computer,Maintenance End Date");
+
             int total = serials.Length;
             int completed = 0;
 
@@ -53,60 +55,57 @@ namespace SWLicenses
                 {
                     LookupSerial(driver, serial);
 
-                    int rows = driver.FindElements(By.XPath(@"//*[@id=""dgReport""]/tbody/tr")).Count;
-                    int cols = driver.FindElements(By.XPath(@"//*[@id=""dgReport""]/tbody/tr[2]/td")).Count;
+                    var reportTableRows = driver.FindElements(By.XPath(@"//*[@id=""dgReport""]/tbody/tr")).ToList();
+                    int numRows = reportTableRows.Count;
 
-                    String productName = driver.FindElement(By.Id("lblProdName")).Text;
-                    String serialNumber = driver.FindElement(By.Id("lblSerialNumber")).Text;
-                    String maintEnd = driver.FindElement(By.Id("lblMaintEnd")).Text;
+                    var productName = driver.FindElement(By.Id("lblProdName")).Text;
+                    var serialNumber = driver.FindElement(By.Id("lblSerialNumber")).Text;
+                    var maintEnd = driver.FindElement(By.Id("lblMaintEnd")).Text;
 
-                    License license = new License(productName, serialNumber, maintEnd);
+                    var license = new License(productName, serialNumber, maintEnd);
 
-                    int flag = 0;
-                    int count = 0;
-
-                    for (int i = 3; i < rows + 1; i++)
+                    bool hasActiveComputer = false;
+                    foreach (var row in reportTableRows.Skip(2))
                     {
-                        flag++;
-                        String row = i.ToString();
-                        String value = driver.FindElement(By.XPath(@"//*[@id=""dgReport""]/tbody/tr[" + row + "]/td[3]")).Text;
-                        if (value.Equals("Y"))
+                        var rowData = row.FindElements(By.TagName("td")).ToList();
+                        if (rowData[2].Text.Equals("Y"))
                         {
-                            String activatedComp = driver.FindElement(By.XPath(@"//*[@id=""dgReport""]/tbody/tr[" + row + "]/td[2]")).Text;
-                            license.ActivatedComputer = activatedComp;
+                            license.ActivatedComputer = rowData[1].Text;
                             license.Write(sw);
-
+                            hasActiveComputer = true;
                         }
-                        else
-                        {
-                            count++;
-                        }
-
                     }
-                    if (flag == count)
+
+                    if (!hasActiveComputer)
                     {
                         license.Write(sw);
                     }
+
                     driver.FindElement(By.LinkText("Log Out")).Click();
                     Login(driver);
                 }
                 catch
                 {
-                    sw.WriteLine("NONE," + serial + ",NONE,NONE");
+                    sw.WriteLine($"N/A,{serial},N/A,N/A");
                     driver.FindElement(By.LinkText("Log Out")).Click();
                     Login(driver);
                 }
+
                 completed++;
                 int percent = completed * 100 / total;
                 progress.Report(percent);
 
-                int completedWidth = percent * width / 100;
-                string progressBar = "[" + new string('#', completedWidth) + new string(' ', width - completedWidth) + "]";
-                Console.Write($"\r{progressBar} {percent}%");
+                Console.Write($"\r[{GenerateProgressBar(percent, 50)}] {percent}%");
             }
-            sw.Close();
+
             driver.Close();
             driver.Quit();
+        }
+
+        private static string GenerateProgressBar(int progress, int width)
+        {
+            int completedWidth = progress * width / 100;
+            return new string('#', completedWidth) + new string(' ', width - completedWidth);
         }
     }
 }
