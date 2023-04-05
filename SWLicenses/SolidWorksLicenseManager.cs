@@ -1,12 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using OpenQA.Selenium;
+﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
-using SWLicenses;
 
 namespace SWLicenses
 {
@@ -14,7 +9,7 @@ namespace SWLicenses
     {
         private const string Url = "https://activate.solidworks.com/manager/";
 
-        public static IWebDriver CreateChromeDriver()
+        internal static IWebDriver CreateChromeDriver()
         {
             var options = new ChromeOptions();
             options.AddArguments("headless");
@@ -28,7 +23,7 @@ namespace SWLicenses
             return driver;
         }
 
-        public static async void Login(IWebDriver driver)
+        internal static async Task Login(IWebDriver driver)
         {
             string[] credentials = await Configuration.LoadCredentialsAsync();
             driver.FindElement(By.Id("Login2_txtName")).SendKeys(credentials[0]);
@@ -36,21 +31,14 @@ namespace SWLicenses
             driver.FindElement(By.Id("Login2_cmdLogin")).Click();
         }
 
-        public static void Logout(IWebDriver driver)
-        {
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-            var logoutLink = wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText("Log Out")));
-            logoutLink.Click();
-        }
-
-        public static void LookupSerial(IWebDriver driver, string serial)
+        internal static void LookupSerial(IWebDriver driver, string serial)
         {
             driver.FindElement(By.Id("txtSearch")).SendKeys(serial);
             driver.FindElement(By.Id("cmdLookup")).Click();
             driver.FindElement(By.LinkText("View")).Click();
         }
 
-        public static async Task LookupSerials(IWebDriver driver, string[] serials, IProgress<int> progress)
+        internal static async Task LookupSerials(IWebDriver driver, string[] serials, IProgress<int> progress)
         {
             using var licenseInfoWriter = new LicenseInfoWriter("results.csv");
 
@@ -75,7 +63,7 @@ namespace SWLicenses
                         var rowData = row.FindElements(By.TagName("td")).ToList();
                         if (rowData[2].Text.Equals("Y"))
                         {
-                            licenseInfo.ActivatedComputer = rowData[1].Text;
+                            licenseInfo.SetActivatedComputer(rowData[1].Text);
                             licenseInfoWriter.Write(licenseInfo);
                             hasActiveComputer = true;
                         }
@@ -96,9 +84,9 @@ namespace SWLicenses
                     {
                         Console.WriteLine("Log Out link not found after waiting.");
                     }
-                    Login(driver);
+                    await Login(driver);
                 }
-                catch
+                catch (NoSuchElementException)
                 {
                     licenseInfoWriter.Write(new LicenseInfo("N/A", serial, "N/A", DateTime.MinValue));
                     try
@@ -111,7 +99,7 @@ namespace SWLicenses
                     {
                         Console.WriteLine("Log Out link not found after waiting.");
                     }
-                    Login(driver);
+                    await Login(driver);
                 }
 
                 completed++;
@@ -122,21 +110,7 @@ namespace SWLicenses
             }
         }
 
-        private static bool TryFindElement(IWebDriver driver, By by, out IWebElement element)
-        {
-            try
-            {
-                element = driver.FindElement(by);
-                return true;
-            }
-            catch (NoSuchElementException)
-            {
-                element = null;
-                return false;
-            }
-        }
-
-        private static string GenerateProgressBar(int progress, int width)
+        internal static string GenerateProgressBar(int progress, int width)
         {
             int completedWidth = progress * width / 100;
             int remainingWidth = width - completedWidth;

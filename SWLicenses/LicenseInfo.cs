@@ -1,16 +1,13 @@
-﻿using System;
-using System.IO;
-
-namespace SWLicenses
+﻿namespace SWLicenses
 {
     internal class LicenseInfo
     {
-        public string ProductName { get; set; }
-        public string SerialNumber { get; set; }
-        public string ActivatedComputer { get; set; }
-        public DateTime MaintenanceEndDate { get; set; }
+        private string ProductName { get; set; }
+        private string SerialNumber { get; set; }
+        private string ActivatedComputer { get; set; }
+        private DateTime MaintenanceEndDate { get; set; }
 
-        public LicenseInfo(string productName, string serialNumber, string maintenanceEndDate)
+        internal LicenseInfo(string productName, string serialNumber, string maintenanceEndDate)
         {
             ProductName = productName;
             SerialNumber = serialNumber;
@@ -26,10 +23,16 @@ namespace SWLicenses
             MaintenanceEndDate = maintenanceEndDate;
         }
 
-        public void Write(StreamWriter sw)
+        internal void Write(StreamWriter sw)
         {
             sw.WriteLine(ToString());
         }
+
+        internal void SetActivatedComputer(string activatedComputer)
+        {
+            ActivatedComputer = activatedComputer;
+        }
+
 
         public override string ToString()
         {

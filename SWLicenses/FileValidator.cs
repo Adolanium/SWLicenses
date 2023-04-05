@@ -1,25 +1,21 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-
-namespace SWLicenses
+﻿namespace SWLicenses
 {
     internal class FileValidator
     {
-        public static async Task CheckExistenceAsync()
+        internal static async Task CheckExistenceAsync()
         {
             await CheckFileExistsAndNotEmptyAsync("serials.txt", "Error: \"serials.txt\" does not exist.", "Error: \"serials.txt\" is empty. Add serial numbers to it.");
 
             await CheckFileExistsAndNotEmptyAsync("credentials.txt", "Error: \"credentials.txt\" does not exist.", "Error: \"credentials.txt\" is empty. Add your credentials to it.");
         }
 
-        private static async Task CheckFileExistsAndNotEmptyAsync(string filePath, string notExistMessage, string emptyMessage)
+        internal static async Task CheckFileExistsAndNotEmptyAsync(string filePath, string notExistMessage, string emptyMessage)
         {
             CheckFileExists(filePath, notExistMessage);
             await CheckFileNotEmptyAsync(filePath, emptyMessage);
         }
 
-        private static void CheckFileExists(string filePath, string errorMessage)
+        internal static void CheckFileExists(string filePath, string errorMessage)
         {
             if (!File.Exists(filePath))
             {
@@ -40,7 +36,7 @@ namespace SWLicenses
             }
         }
 
-        private static async Task CheckFileNotEmptyAsync(string filePath, string errorMessage)
+        internal static async Task CheckFileNotEmptyAsync(string filePath, string errorMessage)
         {
             if ((await File.ReadAllLinesAsync(filePath)).Length == 0)
             {
@@ -48,7 +44,7 @@ namespace SWLicenses
             }
         }
 
-        private static void ExitWithMessage(string message)
+        internal static void ExitWithMessage(string message)
         {
             Console.WriteLine(message);
             Console.ReadKey();

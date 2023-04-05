@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using OpenQA.Selenium;
-using SWLicenses;
+﻿using OpenQA.Selenium;
 
 namespace SWLicenses
 {
     internal class LicenseInfoParser
     {
-        public static LicenseInfo ParseLicenseInfo(IWebDriver driver)
+        internal static LicenseInfo ParseLicenseInfo(IWebDriver driver)
         {
             var productName = driver.FindElement(By.Id("lblProdName")).Text;
             var serialNumber = driver.FindElement(By.Id("lblSerialNumber")).Text;
@@ -15,7 +13,7 @@ namespace SWLicenses
             return new LicenseInfo(productName, serialNumber, maintEnd);
         }
 
-        public static List<IWebElement> GetReportTableRows(IWebDriver driver)
+        internal static List<IWebElement> GetReportTableRows(IWebDriver driver)
         {
             return driver.FindElements(By.XPath(@"//*[@id=""dgReport""]/tbody/tr")).ToList();
         }
