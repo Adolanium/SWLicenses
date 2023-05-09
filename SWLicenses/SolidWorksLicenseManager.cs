@@ -2,6 +2,7 @@
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
+using System.Collections.ObjectModel;
 
 namespace SWLicenses
 {
@@ -25,7 +26,7 @@ namespace SWLicenses
 
         internal static async Task Login(IWebDriver driver)
         {
-            string[] credentials = await Configuration.LoadCredentialsAsync();
+            string[] credentials = await Configuration.LoadCredentialsAsync().ConfigureAwait(false);
             driver.FindElement(By.Id("Login2_txtName")).SendKeys(credentials[0]);
             driver.FindElement(By.Id("Login2_txtPassword")).SendKeys(credentials[1]);
             driver.FindElement(By.Id("Login2_cmdLogin")).Click();
@@ -33,6 +34,20 @@ namespace SWLicenses
             // Wait for the search input to be visible after logging in
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
             wait.Until(ExpectedConditions.ElementIsVisible(By.Id("txtSearch")));
+        }
+
+        internal static void LogOut(IWebDriver driver)
+        {
+            try
+            {
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+                var logoutLink = wait.Until(ExpectedConditions.ElementIsVisible(By.LinkText("Log Out")));
+                logoutLink.Click();
+            }
+            catch (WebDriverTimeoutException)
+            {
+                Console.WriteLine("Log Out link not found after waiting.");
+            }
         }
 
         internal static void LookupSerial(IWebDriver driver, string serial)
@@ -65,56 +80,16 @@ namespace SWLicenses
             {
                 try
                 {
-                    LookupSerial(driver, serial);
-
-                    var reportTableRows = LicenseInfoParser.GetReportTableRows(driver);
-                    int numRows = reportTableRows.Count;
-
-                    var licenseInfo = LicenseInfoParser.ParseLicenseInfo(driver);
-
-                    bool hasActiveComputer = false;
-                    foreach (var row in reportTableRows.Skip(2))
-                    {
-                        var rowData = row.FindElements(By.TagName("td")).ToList();
-                        if (rowData[2].Text.Equals("Y"))
-                        {
-                            licenseInfo.SetActivatedComputer(rowData[1].Text);
-                            licenseInfoWriter.Write(licenseInfo);
-                            hasActiveComputer = true;
-                        }
-                    }
-
-                    if (!hasActiveComputer)
-                    {
-                        licenseInfoWriter.Write(licenseInfo);
-                    }
-
-                    try
-                    {
-                        var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                        var logoutLink = wait.Until(ExpectedConditions.ElementIsVisible(By.LinkText("Log Out")));
-                        logoutLink.Click();
-                    }
-                    catch (WebDriverTimeoutException)
-                    {
-                        Console.WriteLine("Log Out link not found after waiting.");
-                    }
-                    await Login(driver);
+                    ProcessSerial(driver, serial, licenseInfoWriter);
                 }
                 catch (NoSuchElementException)
                 {
-                    licenseInfoWriter.Write(new LicenseInfo("N/A", serial, "N/A", DateTime.MinValue));
-                    try
-                    {
-                        var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                        var logoutLink = wait.Until(ExpectedConditions.ElementIsVisible(By.LinkText("Log Out")));
-                        logoutLink.Click();
-                    }
-                    catch (WebDriverTimeoutException)
-                    {
-                        Console.WriteLine("Log Out link not found after waiting.");
-                    }
-                    await Login(driver);
+                    HandleNoSuchElementException(serial, licenseInfoWriter);
+                }
+                finally
+                {
+                    LogOut(driver);
+                    await Login(driver).ConfigureAwait(false);
                 }
 
                 completed++;
@@ -124,6 +99,48 @@ namespace SWLicenses
                 Console.Write($"\r[{GenerateProgressBar(percent, 50)}] {percent}%");
             }
         }
+
+        internal static void ProcessSerial(IWebDriver driver, string serial, LicenseInfoWriter licenseInfoWriter)
+        {
+            LookupSerial(driver, serial);
+
+            var reportTableRows = LicenseInfoParser.GetReportTableRows(driver);
+            var licenseInfo = LicenseInfoParser.ParseLicenseInfo(driver);
+
+            bool hasActiveComputer = HandleLicenseActivation(reportTableRows, licenseInfo, licenseInfoWriter);
+
+            if (!hasActiveComputer)
+            {
+                WriteInactiveLicense(licenseInfo, licenseInfoWriter);
+            }
+        }
+
+        internal static bool HandleLicenseActivation(List<IWebElement> reportTableRows, LicenseInfo licenseInfo, LicenseInfoWriter licenseInfoWriter)
+        {
+            bool hasActiveComputer = false;
+            foreach (var row in reportTableRows.Skip(2))
+            {
+                var columnData = row.FindElements(By.TagName("td")).ToList();
+                if (columnData[2].Text.Equals("Y"))
+                {
+                    licenseInfo.SetActivatedComputer(columnData[1].Text);
+                    licenseInfoWriter.Write(licenseInfo);
+                    hasActiveComputer = true;
+                }
+            }
+            return hasActiveComputer;
+        }
+
+        internal static void WriteInactiveLicense(LicenseInfo licenseInfo, LicenseInfoWriter licenseInfoWriter)
+        {
+            licenseInfoWriter.Write(licenseInfo);
+        }
+
+        internal static void HandleNoSuchElementException(string serial, LicenseInfoWriter licenseInfoWriter)
+        {
+            licenseInfoWriter.Write(new LicenseInfo("N/A", serial, "N/A", DateTime.MinValue));
+        }
+
 
         internal static string GenerateProgressBar(int progress, int width)
         {
