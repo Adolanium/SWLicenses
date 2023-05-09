@@ -29,14 +29,29 @@ namespace SWLicenses
             driver.FindElement(By.Id("Login2_txtName")).SendKeys(credentials[0]);
             driver.FindElement(By.Id("Login2_txtPassword")).SendKeys(credentials[1]);
             driver.FindElement(By.Id("Login2_cmdLogin")).Click();
+
+            // Wait for the search input to be visible after logging in
+            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+            wait.Until(ExpectedConditions.ElementIsVisible(By.Id("txtSearch")));
         }
 
         internal static void LookupSerial(IWebDriver driver, string serial)
         {
+            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+
+            // Wait for the search input to be visible
+            wait.Until(ExpectedConditions.ElementIsVisible(By.Id("txtSearch")));
             driver.FindElement(By.Id("txtSearch")).SendKeys(serial);
+
+            // Wait for the lookup button to be clickable
+            wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("cmdLookup")));
             driver.FindElement(By.Id("cmdLookup")).Click();
+
+            // Wait for the view link to be clickable
+            wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText("View")));
             driver.FindElement(By.LinkText("View")).Click();
         }
+
 
         internal static async Task LookupSerials(IWebDriver driver, string[] serials, IProgress<int> progress)
         {
