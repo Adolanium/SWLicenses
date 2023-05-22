@@ -7,7 +7,7 @@
         internal LicenseInfoWriter(string filePath)
         {
             _sw = new StreamWriter(filePath);
-            _sw.WriteLine("\"Product Name\",\"Serial Number\",\"Activated Computer\",\"Maintenance End Date\"");
+            _sw.WriteLine("\"Product Name\",\"Version\",\"Serial Number\",\"Activated Computer\",\"Maintenance End Date\"");
         }
 
         internal void Write(LicenseInfo licenseInfo)

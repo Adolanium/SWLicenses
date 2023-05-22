@@ -138,7 +138,7 @@ namespace SWLicenses
 
         internal static void HandleNoSuchElementException(string serial, LicenseInfoWriter licenseInfoWriter)
         {
-            licenseInfoWriter.Write(new LicenseInfo("N/A", serial, "N/A", DateTime.MinValue));
+            licenseInfoWriter.Write(new LicenseInfo("N/A", serial, "N/A", DateTime.MinValue, "N/A"));
         }
 
 
