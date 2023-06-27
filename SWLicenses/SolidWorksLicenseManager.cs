@@ -50,7 +50,7 @@ namespace SWLicenses
             }
         }
 
-        internal static void LookupSerial(IWebDriver driver, string serial)
+        internal static bool LookupSerial(IWebDriver driver, string serial)
         {
             var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
 
@@ -62,11 +62,31 @@ namespace SWLicenses
             wait.Until(ExpectedConditions.ElementToBeClickable(By.Id("cmdLookup")));
             driver.FindElement(By.Id("cmdLookup")).Click();
 
+            // Check if the no match message is present
+            if (IsElementPresent(driver, By.Id("lblNoMatch")))
+            {
+                return false;
+            }
+
             // Wait for the view link to be clickable
             wait.Until(ExpectedConditions.ElementToBeClickable(By.LinkText("View")));
             driver.FindElement(By.LinkText("View")).Click();
+
+            return true;
         }
 
+        private static bool IsElementPresent(IWebDriver driver, By by)
+        {
+            try
+            {
+                driver.FindElement(by);
+                return true;
+            }
+            catch (NoSuchElementException)
+            {
+                return false;
+            }
+        }
 
         internal static async Task LookupSerials(IWebDriver driver, string[] serials, IProgress<int> progress)
         {
@@ -102,16 +122,17 @@ namespace SWLicenses
 
         internal static void ProcessSerial(IWebDriver driver, string serial, LicenseInfoWriter licenseInfoWriter)
         {
-            LookupSerial(driver, serial);
-
-            var reportTableRows = LicenseInfoParser.GetReportTableRows(driver);
-            var licenseInfo = LicenseInfoParser.ParseLicenseInfo(driver);
-
-            bool hasActiveComputer = HandleLicenseActivation(reportTableRows, licenseInfo, licenseInfoWriter);
-
-            if (!hasActiveComputer)
+            if (LookupSerial(driver, serial))
             {
-                WriteInactiveLicense(licenseInfo, licenseInfoWriter);
+                var reportTableRows = LicenseInfoParser.GetReportTableRows(driver);
+                var licenseInfo = LicenseInfoParser.ParseLicenseInfo(driver);
+
+                bool hasActiveComputer = HandleLicenseActivation(reportTableRows, licenseInfo, licenseInfoWriter);
+
+                if (!hasActiveComputer)
+                {
+                    WriteInactiveLicense(licenseInfo, licenseInfoWriter);
+                }
             }
         }
 
