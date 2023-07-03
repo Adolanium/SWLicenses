@@ -8,6 +8,8 @@ namespace SWLicenses
     {
         public static async Task Main(string[] args)
         {
+            Console.CursorVisible = false;
+
             await FileValidator.CheckExistenceAsync();
 
             string[] serials = await Configuration.LoadSerialsAsync();
@@ -18,12 +20,12 @@ namespace SWLicenses
 
             var progress = new Progress<int>(percent =>
             {
-                Console.WriteLine($" Progress: {percent}%");
+                Console.Write($"\rProgress: [{SolidWorksLicenseManager.GenerateProgressBar(percent, 50)}] {percent}%{" ",-10}");
             });
 
             await SolidWorksLicenseManager.LookupSerials(driver, serials, progress);
 
-            Console.WriteLine("Press any key to exit...");
+            Console.WriteLine("\n\nPress any key to exit...");
             Console.ReadKey();
 
             driver.Close();

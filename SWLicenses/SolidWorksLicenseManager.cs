@@ -116,7 +116,6 @@ namespace SWLicenses
                 int percent = completed * 100 / total;
                 progress.Report(percent);
 
-                Console.Write($"\r[{GenerateProgressBar(percent, 50)}] {percent}%");
             }
         }
 
