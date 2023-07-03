@@ -65,6 +65,11 @@ namespace SWLicenses
             // Check if the no match message is present
             if (IsElementPresent(driver, By.Id("lblNoMatch")))
             {
+                // Log the failed serial number
+                using (StreamWriter sw = File.AppendText("logs.txt"))
+                {
+                    sw.WriteLine($"Failed to find serial number: {serial}");
+                }
                 return false;
             }
 
@@ -74,6 +79,7 @@ namespace SWLicenses
 
             return true;
         }
+
 
         private static bool IsElementPresent(IWebDriver driver, By by)
         {
